@@ -219,7 +219,7 @@ public class DeviceManager : MonoBehaviour
     }
 
     #region FIKA
-    public event Action<string, int, Item> OnAddBatteryToSlot;
+    public event Action<string, int, Item, bool?> OnAddBatteryToSlot;
 
     public Action SubscribeToOnDeviceStateChanged(Action<string, bool, bool> action)
     {
@@ -304,17 +304,32 @@ public class DeviceManager : MonoBehaviour
 
         Slot[] batterySlots = compoundItem.GetBatterySlots(deviceData.SlotCount);
 
+        List<(int SlotIndex, Item Battery)> addedBatteries = null;
+        bool? initialToggleState = null;
         if (isPlayerItem && (player.SearchController is BotSearchControllerClass || RaidChangesUtil.IsScavRaid))
         {
             // AI controlled, player.IsAI not yet available
-            AddBatteriesToDevice(player, compoundItem, batterySlots, ref deviceData);
+            addedBatteries = AddBatteriesToDevice(player, compoundItem, batterySlots, ref deviceData, out initialToggleState);
         }
 
         Add(compoundItem, batterySlots, ref deviceData);
+
+        if (addedBatteries is null) return;
+
+        foreach (var (slotIndex, battery) in addedBatteries)
+        {
+            OnAddBatteryToSlot?.Invoke(compoundItem.Id, slotIndex, battery, initialToggleState);
+        }
     }
 
-    private void AddBatteriesToDevice(Player player, Item device, Slot[] batterySlots, ref DeviceData deviceData)
+    private static List<(int SlotIndex, Item Battery)> AddBatteriesToDevice(
+        Player player,
+        Item device,
+        Slot[] batterySlots,
+        ref DeviceData deviceData,
+        out bool? initialToggleState)
     {
+        List<(int SlotIndex, Item Battery)> addedBatteries = [];
         for (var i = 0; i < batterySlots.Length; i++)
         {
             var slot = batterySlots[i];
@@ -322,10 +337,11 @@ public class DeviceManager : MonoBehaviour
             battery.DrainBattery(player);
             if (!slot.AddBatteryToSlot(battery)) continue;
 
-            OnAddBatteryToSlot?.Invoke(device.Id, i, battery);
+            addedBatteries.Add((i, battery));
         }
 
-        device.ToggleItem(true);
+        initialToggleState = device.SetToggleStateLocal(true);
+        return addedBatteries;
     }
 
     private static GClass3379 GetRelatedComponentToSet(Item item)

@@ -61,10 +61,10 @@ public class DeviceSyncServerManager : BaseSyncManager
         _fikaServer.SendNetReusable(ref _devicePacket, DeliveryMethod.ReliableUnordered);
     }
 
-    private void SendBotBatteryPacket(string deviceId, int slotIndex, Item battery)
+    private void SendBotBatteryPacket(string deviceId, int slotIndex, Item battery, bool? initialToggleState)
     {
         _devicePacket.DeviceId = deviceId;
-        _devicePacket.SubPacket = BotBatteryPacket.FromValue(battery, slotIndex);
+        _devicePacket.SubPacket = BotBatteryPacket.FromValue(battery, slotIndex, initialToggleState);
         _devicePacket.Type = EDeviceSubPacketType.BotBattery;
         _fikaServer.SendNetReusable(ref _devicePacket, DeliveryMethod.ReliableOrdered);
     }

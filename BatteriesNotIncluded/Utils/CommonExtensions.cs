@@ -109,6 +109,20 @@ public static class CommonExtensions
         invController.RunNetworkTransaction(toggleOperation.Value);
     }
 
+    public static bool? SetToggleStateLocal(this Item item, bool isActive)
+    {
+        if (!item.TryGetItemComponent(out TogglableComponent togglableComponent)) return null;
+        if (togglableComponent.On == isActive) return togglableComponent.On;
+
+        var toggleOperation = togglableComponent.Set(isActive, false, true);
+        if (toggleOperation.Failed)
+        {
+            LoggerUtil.Warning($"Failed to locally toggle {item.ToFullString()}: {toggleOperation.Error}");
+        }
+
+        return togglableComponent.On;
+    }
+
     /// <summary>
     /// Add battery to slot using DeviceData's batteryId
     /// </summary>

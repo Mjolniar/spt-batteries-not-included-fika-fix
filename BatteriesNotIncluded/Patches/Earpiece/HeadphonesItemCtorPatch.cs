@@ -28,6 +28,9 @@ public class HeadphonesItemCtorPatch : ModulePatch
             var togglable = new TogglableComponent(__instance);
             BatteriesNotIncluded.HeadphonesTogglableField(__instance) = togglable;
             __instance.Components.Add(togglable);
+
+            // Match the non-prepatched path: powered headphones start in the normal on state.
+            togglable.Set(true, false, true);
         }
         else
         {

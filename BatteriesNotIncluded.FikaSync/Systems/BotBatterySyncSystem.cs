@@ -1,7 +1,10 @@
-﻿using BatteriesNotIncluded.FikaSync.Packets;
+using BatteriesNotIncluded.FikaSync.Packets;
 using BatteriesNotIncluded.FikaSync.Utils;
 using BatteriesNotIncluded.Managers;
+using BatteriesNotIncluded.Systems;
+using BatteriesNotIncluded.Utils;
 using EFT.InventoryLogic;
+using LoggerUtil = BatteriesNotIncluded.FikaSync.Utils.LoggerUtil;
 
 namespace BatteriesNotIncluded.FikaSync.Systems;
 
@@ -10,6 +13,7 @@ public class BotBatterySyncSystem : PacketBaseSystem<BotBatteryPacket>
     public override void Run(DeviceManager manager, int i)
     {
         var slot = manager.BatterySlots[i][CurrentPacket.SlotIndex];
+        var syncedBattery = false;
 
         var addOp = slot.Add(CurrentPacket.Battery, false);
         switch (addOp)
@@ -25,11 +29,27 @@ public class BotBatterySyncSystem : PacketBaseSystem<BotBatteryPacket>
 
                 resourceComponent.Value = CurrentPacket.Battery.GetItemComponent<ResourceComponent>()!.Value;
                 LoggerUtil.Debug($"Set existing battery {slot.ContainedItem} charge to {resourceComponent.Value}");
-                return;
+                syncedBattery = true;
+                break;
             }
             default:
                 LoggerUtil.Debug($"Set battery {slot.ContainedItem} charge to {slot.ContainedItem!.GetItemComponent<ResourceComponent>()?.Value}");
-                return;
+                syncedBattery = true;
+                break;
         }
+
+        if (!syncedBattery) return;
+
+        if (CurrentPacket.HasInitialToggleState)
+        {
+            manager.Devices[i].SetToggleStateLocal(CurrentPacket.InitialToggleState);
+        }
+
+        manager.IsPrevOperable[i] = manager.IsOperable[i];
+        manager.IsOperable[i] = DeviceOperableSystem.IsDeviceOperable(manager.BatterySlots[i]);
+        manager.IsPrevActive[i] = manager.IsActive[i];
+        manager.IsActive[i] = manager.IsOperable[i] && DeviceActiveSystem.IsDeviceToggled(manager.RelatedComponentRef[i]);
+
+        new DeviceEnforcementSystem().Run(manager, i);
     }
 }
