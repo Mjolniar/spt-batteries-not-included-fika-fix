@@ -2,7 +2,6 @@ using BatteriesNotIncluded.FikaSync.Packets;
 using BatteriesNotIncluded.FikaSync.Utils;
 using BatteriesNotIncluded.Managers;
 using BatteriesNotIncluded.Systems;
-using BatteriesNotIncluded.Utils;
 using EFT.InventoryLogic;
 using LoggerUtil = BatteriesNotIncluded.FikaSync.Utils.LoggerUtil;
 
@@ -39,11 +38,6 @@ public class BotBatterySyncSystem : PacketBaseSystem<BotBatteryPacket>
         }
 
         if (!syncedBattery) return;
-
-        if (CurrentPacket.HasInitialToggleState)
-        {
-            manager.Devices[i].SetToggleStateLocal(CurrentPacket.InitialToggleState);
-        }
 
         manager.IsPrevOperable[i] = manager.IsOperable[i];
         manager.IsOperable[i] = DeviceOperableSystem.IsDeviceOperable(manager.BatterySlots[i]);

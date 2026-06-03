@@ -219,7 +219,7 @@ public class DeviceManager : MonoBehaviour
     }
 
     #region FIKA
-    public event Action<string, int, Item, bool?> OnAddBatteryToSlot;
+    public event Action<string, int, Item> OnAddBatteryToSlot;
 
     public Action SubscribeToOnDeviceStateChanged(Action<string, bool, bool> action)
     {
@@ -305,11 +305,10 @@ public class DeviceManager : MonoBehaviour
         Slot[] batterySlots = compoundItem.GetBatterySlots(deviceData.SlotCount);
 
         List<(int SlotIndex, Item Battery)> addedBatteries = null;
-        bool? initialToggleState = null;
         if (isPlayerItem && (player.SearchController is BotSearchControllerClass || RaidChangesUtil.IsScavRaid))
         {
             // AI controlled, player.IsAI not yet available
-            addedBatteries = AddBatteriesToDevice(player, compoundItem, batterySlots, ref deviceData, out initialToggleState);
+            addedBatteries = AddBatteriesToDevice(player, compoundItem, batterySlots, ref deviceData);
         }
 
         Add(compoundItem, batterySlots, ref deviceData);
@@ -318,7 +317,7 @@ public class DeviceManager : MonoBehaviour
 
         foreach (var (slotIndex, battery) in addedBatteries)
         {
-            OnAddBatteryToSlot?.Invoke(compoundItem.Id, slotIndex, battery, initialToggleState);
+            OnAddBatteryToSlot?.Invoke(compoundItem.Id, slotIndex, battery);
         }
     }
 
@@ -326,8 +325,7 @@ public class DeviceManager : MonoBehaviour
         Player player,
         Item device,
         Slot[] batterySlots,
-        ref DeviceData deviceData,
-        out bool? initialToggleState)
+        ref DeviceData deviceData)
     {
         List<(int SlotIndex, Item Battery)> addedBatteries = [];
         for (var i = 0; i < batterySlots.Length; i++)
@@ -340,7 +338,7 @@ public class DeviceManager : MonoBehaviour
             addedBatteries.Add((i, battery));
         }
 
-        initialToggleState = device.SetToggleStateLocal(true);
+        device.SetToggleStateLocal(true);
         return addedBatteries;
     }
 

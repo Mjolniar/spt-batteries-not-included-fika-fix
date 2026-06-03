@@ -15,8 +15,8 @@ The issue was observed with SPT 4.0.13, Fika.Core 2.2.6, and Fika.Headless 1.4.1
 
 - Keeps Batteries Not Included functionality intact.
 - Avoids sending initial scav/bot device toggle state through generic Fika inventory operations during raid startup.
-- Sends initial toggle state through the Batteries Not Included FikaSync bot-battery packet instead.
-- Applies the initial toggle state locally on receiving clients, then recalculates device operability/activity and runs device enforcement.
+- Keeps the existing Batteries Not Included FikaSync bot-battery packet wire format.
+- After bot-battery sync, recalculates device operability/activity and runs device enforcement on receiving clients.
 - Fixes the prepatched headphones constructor path so powered headphones start in the same default-on state as the non-prepatched path.
 
 ## Install Notes
@@ -27,7 +27,7 @@ Install the patched build on every Fika participant that uses Batteries Not Incl
 - Headless/server client
 - Any additional clients in the same Fika raid
 
-Do not mix patched and unpatched `ozen-BatteriesNotIncluded.FikaSync.dll` builds in the same Fika raid. The bot-battery sync packet payload is extended by this patch.
+Install the patched build everywhere you use Batteries Not Included with Fika so behavior is consistent. The bot-battery sync packet payload is intentionally unchanged by this patch, so accidental mixed deployment should fail less severely than the first local prototype, but it is still not a supported test configuration.
 
 ## Validation
 
