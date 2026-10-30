@@ -1,49 +1,53 @@
-# Fika Headless Player-Scav Startup Fix
+# Fika headless player-scav startup fix
 
-This fork is based on `ozen-m/SPT-BatteriesNotIncluded` v1.0.4.
+> AI-generated fix. Original mod by ozen-m.
 
-It carries a local compatibility patch for a Fika/headless player-scav startup issue where a player scav could load into raid with broken hands/firearm behavior:
+Based on `ozen-m/SPT-BatteriesNotIncluded` v1.0.4.
 
-- Primary weapon would not fire.
-- `R` reload would not work, while inventory mag install still worked.
-- Grenades could not be thrown.
-- Picked-up weapons also would not fire.
+## Problem
 
-The issue was observed with SPT 4.0.13, Fika.Core 2.2.6, and Fika.Headless 1.4.13. Logs showed repeated Fika inventory conversion errors involving `TogglableComponent ... already in state True`, followed in some cases by `hands controller can't perform this operation`.
+Seen with SPT 4.0.13, Fika.Core 2.2.6, Fika.Headless 1.4.13. A player scav loads into raid with broken hands/firearm:
 
-## Patch Summary
+- Primary weapon does not fire.
+- `R` reload fails (inventory mag install works).
+- Grenades cannot be thrown.
+- Picked-up weapons do not fire.
 
-- Keeps Batteries Not Included functionality intact.
-- Avoids sending initial scav/bot device toggle state through generic Fika inventory operations during raid startup.
-- Keeps the existing Batteries Not Included FikaSync bot-battery packet wire format.
-- After bot-battery sync, recalculates device operability/activity and runs device enforcement on receiving clients.
-- Fixes the prepatched headphones constructor path so powered headphones start in the same default-on state as the non-prepatched path.
+Logs: repeated Fika inventory conversion errors with `TogglableComponent ... already in state True`, sometimes followed by
+`hands controller can't perform this operation`.
 
-## Install Notes
+## Changes
 
-Install the patched build on every Fika participant that uses Batteries Not Included:
+- Batteries Not Included features unchanged.
+- Initial scav/bot device toggle state is no longer sent through generic Fika inventory operations at raid start.
+- Existing FikaSync bot-battery packet wire format kept.
+- After bot-battery sync, receiving clients recalculate device operability/activity and run device enforcement.
+- Prepatched headphones constructor path now starts powered headphones on, matching the non-prepatched path.
+
+## Install
+
+Install the patched build on every Fika participant using Batteries Not Included:
 
 - Player client
 - Headless/server client
-- Any additional clients in the same Fika raid
+- Every other client in the same raid
 
-Install the patched build everywhere you use Batteries Not Included with Fika so behavior is consistent. The bot-battery sync packet payload is intentionally unchanged by this patch, so accidental mixed deployment should fail less severely than the first local prototype, but it is still not a supported test configuration.
+Mixed deployment is unsupported. The packet payload is unchanged, so an accidental mix should fail less badly than the
+first prototype.
 
 ## Validation
 
-Initial local validation: first 5 headless-hosted scav raids succeeded. Firing, `R` reload, grenade throws, and picked-up weapon firing all worked.
+Done: first 5 headless-hosted scav raids OK. Firing, `R` reload, grenades and picked-up weapons worked.
 
-Recommended broader validation:
+Still to test:
 
 - Player scav with headset.
 - Player scav without headset.
 - Player scav with sights/tactical devices.
 - PMC raid.
-- AI scavs and bot PMCs using powered devices.
-- Multiple Fika clients connected to the same headless host, all using the same patched build.
+- AI scavs and bot PMCs with powered devices.
+- Several Fika clients on one headless host, all on the patched build.
 
 ## Upstream
 
-Original project: https://github.com/ozen-m/SPT-BatteriesNotIncluded
-
-Original license: MIT
+https://github.com/ozen-m/SPT-BatteriesNotIncluded (MIT)
