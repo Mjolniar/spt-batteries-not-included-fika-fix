@@ -1,64 +1,75 @@
-# Batteries Not Included
-Devices now require batteries!
+# Batteries Not Included: Fika scav fix
 
-**Batteries Not Included** is a spiritual successor to the original [BatterySystem](https://forge.sp-tarkov.com/mod/948/batterysystem) mod by [Jiro](https://forge.sp-tarkov.com/user/32217/jiro), continued by [Birgere](https://forge.sp-tarkov.com/user/59606/birgere) in [his version](https://forge.sp-tarkov.com/mod/1708/batterysystem) of the mod for SPT 3.9.0
+> [!WARNING]
+> **AI-generated fix.** The Fika patch in this fork was written by AI coding agents. Not reviewed upstream. Use at
+> your own risk. The original mod is by [ozen-m](https://github.com/ozen-m/SPT-BatteriesNotIncluded).
 
----
+Fork of [ozen-m/SPT-BatteriesNotIncluded](https://github.com/ozen-m/SPT-BatteriesNotIncluded) v1.0.4 (MIT). Adds a
+fix for Fika headless player-scav startup.
 
-### Features
-- Dedicated Battery Slots: All Headsets, Holographic/Reflex Sights, NVDs, and Tactical Devices, now feature dedicated battery slots
-- Batteries: CR123A Battery which replaces the Rechargeable Battery, CR2032 Battery which replaces D Size Battery, and AA Battery
-- Active Drain: Power is consumed when the device is switched *ON*
-- Battery Depletion: Battery is drained based on the device's manufacturer stated estimated battery life (if found) which is mapped to gameplay runtime
-- Togglable Mechanic: Adds a new togglable component to devices for headsets and sights
-- Device Description: Item description lists the required and number of batteries needed for the device to function; also indicated is the runtime of the device with a full charge
-- Bot Batteries: Bots spawn with batteries for their devices, with a random charge that depends on the bot's level if they're a PMC, a Scav, or a Boss
-- Configurable: Configuration is available server side and client side
+## Fix
 
-### Installation
-- Extract the contents of the .zip archive into your SPT folder.
-- Refresh item icons through the SPT Launcher, `Settings -> Clean Temp Files`
-<details>
-  <summary>Demonstration</summary>
+Seen with SPT 4.0.13, Fika.Core 2.2.6, Fika.Headless 1.4.13. A player scav spawns unable to fire, reload with `R`,
+throw grenades or fire picked-up weapons. Log: `TogglableComponent ... already in state True`, then
+`hands controller can't perform this operation`.
 
-![Installation](https://i.imgur.com/3N6gTe2.gif)
-Thank you [DrakiaXYZ](https://forge.sp-tarkov.com/user/27605/drakiaxyz) for the gif
-</details>
+- Initial scav/bot device toggle state is no longer sent through Fika inventory operations at raid start.
+- After bot-battery sync, receiving clients recalculate device state and run enforcement.
+- Prepatched headphones start powered on, same as the non-prepatched path.
+- Bot-battery packet format unchanged.
 
-### Configuration
-#### Server Side
-In the `config.jsonc` file:
-- `globalDrainMultiplier` - A global drain multiplier applied. A higher value results in a faster drain. Default is `1.0`
-- `minGameRuntime` - Minimum game runtime for devices in seconds. This is equivalent to real 1 hour runtime. Default is `900 seconds (15 minutes)`
-- `maxGameRuntime` - Maximum game runtime for devices in seconds. This is equivalent to real 100,000 hours runtime. Default is `9,000 seconds (2.5 hours)`
-- `botBatteries` - Adjust battery charge spawned for bots. Default for PMCs min: `50`; max: `100`, Scavs min: `20`; max: `60`
-- `siccContainerBatteries` - Allow batteries in the SICC Case if enabled. Default is `true`.
-- `debugLogs` - Enable debug logging. Default is `false`.
+Tested: 5 headless-hosted scav raids, all OK. Details: [PATCH_NOTES.md](PATCH_NOTES.md).
 
-In the `customDevices.jsonc` file:
-- This file is used for adding device properties for custom items from mods - Specifies which battery a device uses, with how many batteries are needed to operate, and the battery life of the device in hours. See _file itself_ for examples
+## Install
 
-#### Client Side
-In the BepInEx configuration manager (<kbd>F12</kbd>)
-- `Remaining Battery Tooltip` - Shows the remaining runtime when hovering over a device. Default is `true`
+Install on every Fika participant: player clients and the headless client.
 
-### Compatibility
-- Mods that add custom devices are compatible. These will default to use CR2032 batteries, if not found in the `customDevices.jsonc` configuration file. I will try as much to support all custom devices and fill in the required properties.
-- [Project Fika](https://forge.sp-tarkov.com/mod/2326/project-fika) is compatible with the use of the sync addon
+1. Download the ZIP from [Releases](https://github.com/Mjolniar/spt-batteries-not-included-fika-fix/releases/latest).
+2. Extract into the SPT folder.
+3. SPT Launcher: **Settings > Clean Temp Files**.
 
-### Support
-<details>
-  <summary>Support</summary>
+## Mod features (upstream)
 
-If you find any bugs, issues, feature suggestions, or have balancing suggestions, feel free to post them on the comment section, or open an issue on GitHub, or most preferably through the SPT Discord, ozen
-</details>
+- Battery slots on headsets, holographic/reflex sights, NVDs and tactical devices.
+- Batteries: CR123A (replaces Rechargeable Battery), CR2032 (replaces D Size Battery), AA.
+- Drain only while a device is on. Drain rate from the manufacturer's battery life, mapped to game time.
+- Toggle component for headsets and sights.
+- Item description shows battery type, count and full-charge runtime.
+- Bots spawn with batteries. Charge depends on PMC, Scav or Boss.
 
-### Credits
-<details>
-  <summary>Credits</summary>
+## Config
 
-- Thanks to [Jiro](https://forge.sp-tarkov.com/user/32217/jiro) for the existing bundles and especially for creating the original mod!
-- Thanks to [Birgere](https://forge.sp-tarkov.com/user/59606/birgere) for allowing me to work on this, and for his version of the mod, which made porting and introducing changes easier!
-</details>
+Server, `config.jsonc`:
 
-_**Disclaimer:** I will not be held responsible for any injuries resulting from the loss of optics, illumination, night vision, or active hearing. Please carry extra batteries._
+| Key | Default | Meaning |
+|---|---|---|
+| `globalDrainMultiplier` | `1.0` | Drain speed multiplier |
+| `minGameRuntime` | `900` s | Game runtime of a device rated 1 real hour |
+| `maxGameRuntime` | `9000` s | Game runtime of a device rated 100,000 real hours |
+| `botBatteries` | PMC 50-100, Scav 20-60 | Bot battery charge range |
+| `siccContainerBatteries` | `true` | Allow batteries in the SICC case |
+| `debugLogs` | `false` | Debug logging |
+
+Server, `customDevices.jsonc`: battery type, count and life (hours) for modded devices. Examples in the file.
+Unlisted modded devices use CR2032.
+
+Client, BepInEx config (F12): `Remaining Battery Tooltip`, default `true`.
+
+## Compatibility
+
+- Modded devices: supported. See `customDevices.jsonc`.
+- [Project Fika](https://forge.sp-tarkov.com/mod/2326/project-fika): supported with the sync addon.
+
+## Support
+
+- Fika fix: [issues here](https://github.com/Mjolniar/spt-batteries-not-included-fika-fix/issues).
+- Everything else: [upstream](https://github.com/ozen-m/SPT-BatteriesNotIncluded/issues) or ozen on the SPT Discord.
+
+## Credits
+
+- [ozen-m](https://github.com/ozen-m/SPT-BatteriesNotIncluded): Batteries Not Included.
+- [Jiro](https://forge.sp-tarkov.com/user/32217/jiro): original [BatterySystem](https://forge.sp-tarkov.com/mod/948/batterysystem) and bundles.
+- [Birgere](https://forge.sp-tarkov.com/user/59606/birgere): [BatterySystem for SPT 3.9.0](https://forge.sp-tarkov.com/mod/1708/batterysystem).
+- [DrakiaXYZ](https://forge.sp-tarkov.com/user/27605/drakiaxyz): install GIF.
+
+License: MIT ([LICENSE](LICENSE)).
